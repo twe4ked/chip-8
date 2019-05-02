@@ -1,0 +1,10 @@
+[package]
+name = "chip-8"
+version = "0.1.0"
+authors = ["Odin Dutton <odindutton@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+minifb = "0.13"
+clap = "2.33"
+rand = "0.7"
