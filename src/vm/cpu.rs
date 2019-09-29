@@ -69,7 +69,7 @@ pub fn execute(vm: &mut Vm, opcode: Opcode) {
             }
         }
 
-        Opcode::LdF(x) => vm.registers.i = vm.registers.read(x).into(),
+        Opcode::LdF(x) => vm.registers.i = vm.registers.read(x) as u16 * 5,
 
         Opcode::LdKey(x) => loop {
             if let Some(key) = vm.try_key() {
