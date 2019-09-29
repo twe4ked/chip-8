@@ -1,5 +1,5 @@
-const ON: u32 = u32::max_value();
-const OFF: u32 = u32::min_value();
+const ON: u32 = 0x9a8c98;
+const OFF: u32 = 0x22223b;
 
 pub struct FrameBuffer {
     buffer: Vec<u32>,
@@ -35,7 +35,7 @@ impl FrameBuffer {
 
     pub fn clear(&mut self) {
         for i in 0..(self.width * self.height) {
-            self.buffer[i] = 0x0;
+            self.buffer[i] = OFF;
         }
     }
 }
