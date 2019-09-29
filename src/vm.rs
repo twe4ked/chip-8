@@ -12,6 +12,7 @@ use crate::vm::memory::Memory;
 use crate::vm::registers::Registers;
 use crate::vm::stack::Stack;
 use rand::prelude::*;
+use std::sync::mpsc::Receiver;
 
 pub const WIDTH: usize = 64;
 pub const HEIGHT: usize = 32;
@@ -24,12 +25,12 @@ pub struct Vm {
     st: u8,
     dt: u8,
     pub frame_buffer: FrameBuffer,
-    pub key: Option<Key>,
+    rx_key: Receiver<Option<Key>>,
     rng: ThreadRng,
 }
 
 impl Vm {
-    pub fn new() -> Self {
+    pub fn new(rx_key: Receiver<Option<Key>>) -> Self {
         Self {
             pc: 0x200,
             stack: Stack::new(),
@@ -38,7 +39,7 @@ impl Vm {
             st: 0,
             dt: 0,
             frame_buffer: FrameBuffer::new(WIDTH, HEIGHT),
-            key: None,
+            rx_key,
             rng: rand::thread_rng(),
         }
     }
@@ -59,5 +60,9 @@ impl Vm {
 
     pub fn rand(&mut self) -> u8 {
         self.rng.gen()
+    }
+
+    pub fn try_key(&mut self) -> Option<Key> {
+        self.rx_key.try_iter().last().unwrap_or(None)
     }
 }

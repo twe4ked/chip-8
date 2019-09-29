@@ -28,14 +28,12 @@ fn main() {
     let (tx_key, rx_key) = mpsc::channel::<Option<Key>>();
 
     thread::spawn(move || {
-        let mut vm = Vm::new();
+        let mut vm = Vm::new(rx_key);
         vm.load_rom(&rom);
 
         let mut last_instant = Instant::now();
         loop {
             sleep(Duration::from_micros(1660) - last_instant.elapsed());
-
-            vm.key = rx_key.try_iter().last().unwrap_or(None);
 
             let instruction = vm.fetch();
             let opcode = opcode::decode(instruction);

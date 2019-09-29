@@ -5,7 +5,6 @@ use crate::vm::{Vm, HEIGHT, WIDTH};
 pub fn execute(vm: &mut Vm, opcode: Opcode) {
     let mut new_pc = vm.pc + 2;
 
-    // TODO: Should this happen while we're waiting for a key press,
     if vm.st > 0 {
         vm.st -= 1;
     }
@@ -30,7 +29,7 @@ pub fn execute(vm: &mut Vm, opcode: Opcode) {
         Opcode::SYS(_address) => { /* NO OP */ }
 
         Opcode::SKP(x) => {
-            if let Some(key) = vm.key {
+            if let Some(key) = vm.try_key() {
                 if key as u8 == vm.registers.read(x) {
                     new_pc += 2;
                 }
@@ -38,7 +37,7 @@ pub fn execute(vm: &mut Vm, opcode: Opcode) {
         }
 
         Opcode::SKNP(x) => {
-            if let Some(key) = vm.key {
+            if let Some(key) = vm.try_key() {
                 if key as u8 != vm.registers.read(x) {
                     new_pc += 2;
                 }
@@ -72,11 +71,11 @@ pub fn execute(vm: &mut Vm, opcode: Opcode) {
 
         Opcode::LdF(x) => vm.registers.i = vm.registers.read(x).into(),
 
-        Opcode::LdKey(x) => match vm.key {
-            Some(key) => {
+        Opcode::LdKey(x) => loop {
+            if let Some(key) = vm.try_key() {
                 vm.registers.write(x, key as u8);
+                break;
             }
-            None => new_pc = vm.pc,
         },
 
         Opcode::LdSt(x) => vm.st = vm.registers.read(x),
