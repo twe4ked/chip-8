@@ -5,12 +5,7 @@ use crate::vm::{Vm, HEIGHT, WIDTH};
 pub fn execute(vm: &mut Vm, opcode: Opcode) {
     let mut new_pc = vm.pc + 2;
 
-    if vm.st > 0 {
-        vm.st -= 1;
-    }
-    if vm.dt > 0 {
-        vm.dt -= 1;
-    }
+    vm.update_timers();
 
     match opcode {
         Opcode::DisplayClear => vm.frame_buffer.clear(),

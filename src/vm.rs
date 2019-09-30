@@ -65,4 +65,13 @@ impl Vm {
     pub fn try_key(&mut self) -> Option<Key> {
         self.rx_key.try_iter().last().unwrap_or(None)
     }
+
+    pub fn update_timers(&mut self) {
+        if self.st > 0 {
+            self.st -= 1;
+        }
+        if self.dt > 0 {
+            self.dt -= 1;
+        }
+    }
 }
