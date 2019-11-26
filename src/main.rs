@@ -1,5 +1,6 @@
-use chip_8::opcode;
-use chip_8::vm::{Key, Vm, HEIGHT, WIDTH};
+mod opcode;
+mod vm;
+
 use clap::{App, Arg};
 use minifb::{Scale, Window, WindowOptions};
 use std::fs::File;
@@ -7,6 +8,7 @@ use std::io::Read;
 use std::sync::mpsc;
 use std::thread::{self, sleep};
 use std::time::{Duration, Instant};
+use vm::{Key, Vm, HEIGHT, WIDTH};
 
 fn main() {
     let matches = App::new("LC-3 VM")
