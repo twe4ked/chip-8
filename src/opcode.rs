@@ -147,14 +147,5 @@ mod tests {
         assert_eq!(x, DataRegister::VE); // 14 (0b1110)
         assert_eq!(y, DataRegister::VC); // 12 (0b1100)
         assert_eq!(n.0, 0b1000);
-
-        let x = 456;
-        let ones = x % 10;
-        let tens = x / 10 % 10;
-        let hundreds = x / 100 % 10;
-
-        assert_eq!(hundreds, 4);
-        assert_eq!(tens, 5);
-        assert_eq!(ones, 6);
     }
 }

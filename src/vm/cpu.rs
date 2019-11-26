@@ -42,10 +42,10 @@ pub fn execute(vm: &mut Vm, opcode: Opcode) {
         Opcode::LD6(register, Kk(value)) => vm.registers.write(register, value),
 
         Opcode::LdB(x) => {
-            let x = vm.registers.read(x);
-            vm.memory.write(vm.registers.i, x / 100 % 10);
-            vm.memory.write(vm.registers.i + 1, x / 10 % 10);
-            vm.memory.write(vm.registers.i + 2, x % 10);
+            let parts = Parts::from(vm.registers.read(x));
+            vm.memory.write(vm.registers.i, parts.hundreds);
+            vm.memory.write(vm.registers.i + 1, parts.tens);
+            vm.memory.write(vm.registers.i + 2, parts.ones);
         }
 
         Opcode::LDI(Nnn(value)) => vm.registers.i = value,
@@ -208,6 +208,22 @@ fn wrap_pc(pc: u16) -> u16 {
     pc & (MEMORY_LENGTH as u16 - 1)
 }
 
+struct Parts {
+    ones: u8,
+    tens: u8,
+    hundreds: u8,
+}
+
+impl Parts {
+    fn from(x: u8) -> Self {
+        Self {
+            ones: (x % 10),
+            tens: (x / 10 % 10),
+            hundreds: (x / 100 % 10),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -231,5 +247,13 @@ mod tests {
         memory.read(wrap_pc(memory_length));
         memory.read(wrap_pc(memory_length + 1));
         memory.read(wrap_pc(memory_length + 2));
+    }
+
+    #[test]
+    fn test_parts() {
+        let parts = Parts::from(123);
+        assert_eq!(parts.hundreds, 1);
+        assert_eq!(parts.tens, 2);
+        assert_eq!(parts.ones, 3);
     }
 }
