@@ -1,4 +1,4 @@
-use crate::opcode::{DataRegister, Opcode};
+use crate::opcode::{DataRegister, Kk, Nnn, Opcode, N};
 use crate::vm::memory::MEMORY_LENGTH;
 use crate::vm::{Vm, HEIGHT, WIDTH};
 
@@ -10,11 +10,11 @@ pub fn execute(vm: &mut Vm, opcode: Opcode) {
     match opcode {
         Opcode::DisplayClear => vm.frame_buffer.clear(),
 
-        Opcode::JP(address) => new_pc = address,
+        Opcode::JP(Nnn(address)) => new_pc = address,
 
-        Opcode::JPB(nnn) => new_pc = vm.registers.read(DataRegister::V0) as u16 + nnn,
+        Opcode::JPB(Nnn(nnn)) => new_pc = vm.registers.read(DataRegister::V0) as u16 + nnn,
 
-        Opcode::CALL(address) => {
+        Opcode::CALL(Nnn(address)) => {
             vm.stack.push(wrap_pc(vm.pc + 2)).expect("stack overflow");
             new_pc = address;
         }
@@ -39,7 +39,7 @@ pub fn execute(vm: &mut Vm, opcode: Opcode) {
             }
         }
 
-        Opcode::LD6(register, value) => vm.registers.write(register, value),
+        Opcode::LD6(register, Kk(value)) => vm.registers.write(register, value),
 
         Opcode::LdB(x) => {
             let x = vm.registers.read(x);
@@ -48,7 +48,7 @@ pub fn execute(vm: &mut Vm, opcode: Opcode) {
             vm.memory.write(vm.registers.i + 2, x % 10);
         }
 
-        Opcode::LDI(value) => vm.registers.i = value,
+        Opcode::LDI(Nnn(value)) => vm.registers.i = value,
 
         Opcode::LdAllI(x) => {
             for r in 0..=x as u8 {
@@ -84,13 +84,13 @@ pub fn execute(vm: &mut Vm, opcode: Opcode) {
             vm.registers.write(x, y);
         }
 
-        Opcode::SE3(register, value) => {
+        Opcode::SE3(register, Kk(value)) => {
             if vm.registers.read(register) == value {
                 new_pc += 2
             }
         }
 
-        Opcode::SNE4(register, value) => {
+        Opcode::SNE4(register, Kk(value)) => {
             if vm.registers.read(register) != value {
                 new_pc += 2
             }
@@ -108,7 +108,7 @@ pub fn execute(vm: &mut Vm, opcode: Opcode) {
             }
         }
 
-        Opcode::DRW(x_register, y_register, height) => {
+        Opcode::DRW(x_register, y_register, N(height)) => {
             let x_offset = vm.registers.read(x_register);
             let y_offset = vm.registers.read(y_register);
 
@@ -138,7 +138,7 @@ pub fn execute(vm: &mut Vm, opcode: Opcode) {
             vm.registers.write(DataRegister::VF, vf);
         }
 
-        Opcode::ADD(x, kk) => {
+        Opcode::ADD(x, Kk(kk)) => {
             let result = vm.registers.read(x).wrapping_add(kk);
             vm.registers.write(x, result);
         }
@@ -195,7 +195,7 @@ pub fn execute(vm: &mut Vm, opcode: Opcode) {
             vm.registers.write(x, value.wrapping_mul(2));
         }
 
-        Opcode::RND(x, kk) => {
+        Opcode::RND(x, Kk(kk)) => {
             let rand = vm.rand();
             vm.registers.write(x, rand & kk);
         }

@@ -4,10 +4,10 @@ pub enum Opcode {
     RET,
     SKP(DataRegister),
     SKNP(DataRegister),
-    CALL(u16),
-    SYS(u16),
-    LDI(u16),
-    LD6(DataRegister, u8),
+    CALL(Nnn),
+    SYS(Nnn),
+    LDI(Nnn),
+    LD6(DataRegister, Kk),
     LD8(DataRegister, DataRegister),
     LdDtToReg(DataRegister),
     LdDt(DataRegister),
@@ -21,24 +21,24 @@ pub enum Opcode {
     AND8(DataRegister, DataRegister),
     XOR8(DataRegister, DataRegister),
     ADD8(DataRegister, DataRegister),
-    ADD(DataRegister, u8),
+    ADD(DataRegister, Kk),
     AddI(DataRegister),
     SUB8(DataRegister, DataRegister),
     SHR8(DataRegister, DataRegister),
     SUBN8(DataRegister, DataRegister),
     SHL8(DataRegister, DataRegister),
-    SNE4(DataRegister, u8),
+    SNE4(DataRegister, Kk),
     SE5(DataRegister, DataRegister),
     SNE(DataRegister, DataRegister),
-    SE3(DataRegister, u8),
-    JP(u16),
-    JPB(u16),
-    DRW(DataRegister, DataRegister, u8),
-    RND(DataRegister, u8),
+    SE3(DataRegister, Kk),
+    JP(Nnn),
+    JPB(Nnn),
+    DRW(DataRegister, DataRegister, N),
+    RND(DataRegister, Kk),
 }
 
 #[rustfmt::skip]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DataRegister {
     V0, V1, V2, V3, V4, V5, V6, V7,
     V8, V9, VA, VB, VC, VD, VE, VF,
@@ -57,19 +57,27 @@ impl DataRegister {
     }
 }
 
-fn decode_parts(instruction: u16) -> (u16, u8, u8, u8, u8) {
-    let nnn = instruction & 0x0fff;
-    let kk = (instruction & 0x00ff) as u8;
-    let x = ((instruction >> 8) & 0xf) as u8;
-    let y = ((instruction >> 4) & 0xf) as u8;
-    let n = (instruction & 0x000f) as u8;
-    (nnn, kk, x, y, n)
+#[derive(Debug)]
+pub struct Nnn(pub u16);
+
+#[derive(Debug)]
+pub struct Kk(pub u8);
+
+#[derive(Debug)]
+pub struct N(pub u8);
+
+fn decode_parts(instruction: u16) -> (Nnn, Kk, DataRegister, DataRegister, N) {
+    (
+        Nnn(instruction & 0x0fff),
+        Kk((instruction & 0x00ff) as u8),
+        DataRegister::from(((instruction >> 8) & 0xf) as u8),
+        DataRegister::from(((instruction >> 4) & 0xf) as u8),
+        N((instruction & 0x000f) as u8),
+    )
 }
 
 pub fn decode(instruction: u16) -> Opcode {
     let (nnn, kk, x, y, n) = decode_parts(instruction);
-    let x = DataRegister::from(x);
-    let y = DataRegister::from(y);
 
     match (instruction >> 12) & 0xf {
         0x0 => match instruction {
@@ -84,7 +92,7 @@ pub fn decode(instruction: u16) -> Opcode {
         0x5 => Opcode::SE5(x, y),
         0x6 => Opcode::LD6(x, kk),
         0x7 => Opcode::ADD(x, kk),
-        0x8 => match n {
+        0x8 => match n.0 {
             0x0 => Opcode::LD8(x, y),
             0x1 => Opcode::OR8(x, y),
             0x2 => Opcode::AND8(x, y),
@@ -101,12 +109,12 @@ pub fn decode(instruction: u16) -> Opcode {
         0xb => Opcode::JPB(nnn),
         0xc => Opcode::RND(x, kk),
         0xd => Opcode::DRW(x, y, n),
-        0xe => match kk {
+        0xe => match kk.0 {
             0x9e => Opcode::SKP(x),
             0xa1 => Opcode::SKNP(x),
             _ => invalid_instruction(instruction),
         },
-        0xf => match kk {
+        0xf => match kk.0 {
             0x07 => Opcode::LdDtToReg(x),
             0x0a => Opcode::LdKey(x),
             0x15 => Opcode::LdDt(x),
@@ -134,11 +142,11 @@ mod tests {
     fn test_decode_parts() {
         let (nnn, kk, x, y, n) = decode_parts(0b1111_1110_1100_1000);
 
-        assert_eq!(nnn, 0b1110_1100_1000);
-        assert_eq!(kk, 0b1100_1000);
-        assert_eq!(x, 0b1110);
-        assert_eq!(y, 0b1100);
-        assert_eq!(n, 0b1000);
+        assert_eq!(nnn.0, 0b1110_1100_1000);
+        assert_eq!(kk.0, 0b1100_1000);
+        assert_eq!(x, DataRegister::VE); // 14 (0b1110)
+        assert_eq!(y, DataRegister::VC); // 12 (0b1100)
+        assert_eq!(n.0, 0b1000);
 
         let x = 456;
         let ones = x % 10;
